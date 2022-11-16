@@ -5,8 +5,10 @@ const signUpGetController = (req, res, next) => {
     res.render('signUp.hbs')
 }
 
-
+// controller for sign up page
 const signUpPostController = (req, res, next) => {
+
+
     console.log(req.body);
 
     if (!req.body.email || !req.body.password) {
@@ -44,13 +46,55 @@ const loginGetController = (req, res, next) => {
     res.render('logIn.hbs')
 }
 
+//post controller for log in page 
+
 const loginPostController = (req, res, next) => {
-    res.send('ok')
+console.log(req.body);
+
+    if (!req.body.email || !req.body.password) {
+        res.render('logIn.hbs', {errorMessage: "Sorry you are missing the email or password"})
+        return;
+    }
+
+    User.findOne({ email: req.body.email })
+        .then(foundUser => {
+            if (!foundUser) {
+                // res.send('user or password doesnt exists')
+                res.render('logIn.hbs', {errorMessage: 'Sorry user doesnt exists'})
+                return;
+            }
+
+            const isValidPassword = bcryptjs.compareSync(req.body.password, foundUser.password)
+
+            if(!isValidPassword){
+                // res.send("sorry, wrong password")
+
+                res.render('logIn.hbs', {errorMessage: 'Sorry wrong password'})
+                return
+            }
+
+            req.session.user = foundUser;
+
+            res.redirect('/profile');
+        })
+
+        .catch(err => {
+            console.log(err);
+            res.send(err)
+        })
+
 }
+
+
+const profileGetControllers = (req, res, next ) => {
+    res.render('profile.hbs', req.session.user)
+}
+
 
 module.exports = {
     signUpGetController,
     signUpPostController,
     loginGetController,
-    loginPostController
+    loginPostController,
+    profileGetControllers
 };
